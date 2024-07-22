@@ -419,6 +419,10 @@ class SparkAppManager(LoggingMixin):
                     container_port=4040,
                     name="ui-port",
                 ),
+                k8s.V1ContainerPort(
+                    container_port=8888,
+                    name="jupyter",
+                )
             ],
             env_from=[
                 k8s.V1EnvFromSource(
