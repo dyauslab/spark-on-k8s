@@ -421,7 +421,7 @@ class SparkAppManager(LoggingMixin):
                 ),
                 k8s.V1ContainerPort(
                     container_port=8888,
-                    name="jupyter",
+                    name="jupyter-port",
                 )
             ],
             env_from=[
@@ -514,6 +514,10 @@ class SparkAppManager(LoggingMixin):
                     k8s.V1ServicePort(
                         port=4040,
                         name="ui-port",
+                    ),
+                    k8s.V1ServicePort(
+                        port=8888,
+                        name="jupyter-port",
                     ),
                 ],
                 type="ClusterIP",
