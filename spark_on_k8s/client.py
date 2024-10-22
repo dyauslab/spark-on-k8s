@@ -332,6 +332,7 @@ class SparkOnK8S(LoggingMixin):
             app_name=app_name,
             app_id=app_id,
             image=image,
+            service_account=service_account,
             image_pull_policy=image_pull_policy,
             namespace=namespace,
             args=driver_command_args,
