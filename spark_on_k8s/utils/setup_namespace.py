@@ -26,7 +26,7 @@ class SparkOnK8SNamespaceSetup(LoggingMixin):
         super().__init__(logger_name=logger_name or "SparkOnK8SNamespaceSetup")
         self.k8s_client_manager = k8s_client_manager or KubernetesClientManager()
 
-    def setup_namespace(self, namespace: str, should_print: bool = False):
+    def setup_namespace(self, namespace: str, service_account: str = "spark", should_print: bool = False):
         """Set up a namespace for Spark on Kubernetes.
 
         This method creates a namespace if it doesn't exist, creates a service account for Spark
@@ -34,6 +34,7 @@ class SparkOnK8SNamespaceSetup(LoggingMixin):
         edit cluster role if it doesn't exist.
 
         Args:
+            service_account: service account name
             namespace (str): the namespace to set up
             should_print (bool, optional): whether to print logs instead of logging them.
                 Defaults to False.
@@ -53,9 +54,9 @@ class SparkOnK8SNamespaceSetup(LoggingMixin):
             service_accounts = [
                 sa.metadata.name for sa in api.list_namespaced_service_account(namespace=namespace).items
             ]
-            if "spark" not in service_accounts:
+            if service_account not in service_accounts:
                 self.log(
-                    msg=f"Creating spark service account in namespace {namespace}",
+                    msg=f"Creating {service_account} service account in namespace {namespace}",
                     level=logging.INFO,
                     should_print=should_print,
                 )
@@ -63,7 +64,7 @@ class SparkOnK8SNamespaceSetup(LoggingMixin):
                     namespace=namespace,
                     body=k8s.V1ServiceAccount(
                         metadata=k8s.V1ObjectMeta(
-                            name="spark",
+                            name=service_account,
                         ),
                     ),
                 )
@@ -71,7 +72,7 @@ class SparkOnK8SNamespaceSetup(LoggingMixin):
             cluster_role_bindings = [crb.metadata.name for crb in rbac_api.list_cluster_role_binding().items]
             role_binding_name = f"spark-role-binding-{namespace}"
             if role_binding_name not in cluster_role_bindings:
-                self.log(msg="Creating spark role binding", level=logging.INFO, should_print=should_print)
+                self.log(msg="Creating service_account role binding", level=logging.INFO, should_print=should_print)
                 rbac_api.create_cluster_role_binding(
                     body=k8s.V1ClusterRoleBinding(
                         metadata=k8s.V1ObjectMeta(
@@ -85,7 +86,7 @@ class SparkOnK8SNamespaceSetup(LoggingMixin):
                         subjects=[
                             k8s.RbacV1Subject(
                                 kind="ServiceAccount",
-                                name="spark",
+                                name=service_account,
                                 namespace=namespace,
                             )
                         ],
